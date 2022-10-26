@@ -58,10 +58,12 @@ if __name__ == "__main__":
     ################# Visualize the dataset ##################
     ##########################################################
     # Take a look at the first N items
-    for item in train[:2]:
-        util.plot_waveform(item)
-        util.plot_specgram(item)
-        util.print_stats(item)
+    for i, (spectrogram, freqlabel) in enumerate(train):
+        util.plot_waveform(spectrogram, config.getfloat('Dataset', 'sample-rate-hz'))
+        util.plot_specgram(spectrogram, config.getfloat('Dataset', 'sample-rate-hz'))
+        util.print_stats(spectrogram, config.getfloat('Dataset', 'sample-rate-hz'))
+        if i >= 2:
+            break
     ##########################################################
 
     # Create a neural network based on configuration file

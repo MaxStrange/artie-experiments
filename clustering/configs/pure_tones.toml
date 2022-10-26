@@ -9,5 +9,14 @@ type = "clustering"
 # Size of SGD mini batch
 batch-size = 256
 
+# Sample rate in Hz of each sound
+sample-rate-hz = 22500
+
+# Number of seconds each tone lasts
+signal-duration-seconds = 1
+
+# Dataset size
+size = 512
+
 # What tones (in Hz) to use for data points
 tones = [1000, 8000]
