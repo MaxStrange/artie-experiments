@@ -1,0 +1,13 @@
+[Experiment]
+# Random Seed for reproducibility
+random-seed = 52341097
+
+# Must be the name one of the experiment folders
+type = "clustering"
+
+[Dataset]
+# Size of SGD mini batch
+batch-size = 256
+
+# What tones (in Hz) to use for data points
+tones = [1000, 8000]
