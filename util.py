@@ -1,5 +1,19 @@
-import torch
+import configuration
+import librosa
+import logging
 import matplotlib.pyplot as plt
+import torch
+
+def make_optimizer_from_config_file(config: configuration.Configuration, network: torch.nn.Module):
+    """
+    """
+    match optimizer_name := config.getstr('Training', 'optimizer'):
+        case "Adam":
+            return torch.optim.Adam(network.parameters(), config.getfloat('Training', 'learning-rate'))
+        case _:
+            errmsg = f"Cannot interpret {optimizer_name} for constructing an optimizer."
+            logging.error(errmsg)
+            raise ValueError(errmsg)
 
 def plot_waveform(waveform, sample_rate, title="Waveform", xlim=None, ylim=None):
     waveform = waveform.numpy()
@@ -19,35 +33,25 @@ def plot_waveform(waveform, sample_rate, title="Waveform", xlim=None, ylim=None)
         if ylim:
             axes[c].set_ylim(ylim)
     figure.suptitle(title)
-    plt.show(block=False)
+    plt.show(block=True)
 
-def print_stats(waveform, sample_rate=None, src=None):
-    if src:
-        print("-"*10)
-        print(f"Source: {src}")
-        print("-"*10)
-    if sample_rate:
-        print(f"Sample Rate: {sample_rate}")
-    print("Dtype:", waveform.dtype)
-    print(f" - Max:     {waveform.max().item():6.3f}")
-    print(f" - Min:     {waveform.min().item():6.3f}")
-    print(f" - Mean:    {waveform.mean().item():6.3f}")
-    print(f" - Std Dev: {waveform.std().item():6.3f}")
-    print()
-    print(waveform)
-    print()
+def plot_spectrogram(spec, title=None, ylabel="freq_bin", aspect="auto", xmax=None, block=True, writer=None, writer_label="", writer_step=0):
+    fig, axs = plt.subplots(1, 1)
+    axs.set_title(title or "Spectrogram (db)")
+    axs.set_ylabel(ylabel)
+    axs.set_xlabel("frame")
+    im = axs.imshow(librosa.power_to_db(spec), origin="lower", aspect=aspect)
+    if xmax:
+        axs.set_xlim((0, xmax))
+    fig.colorbar(im, ax=axs)
 
-def plot_specgram(waveform, sample_rate, title="Spectrogram", xlim=None):
-    waveform = waveform.numpy()
-    num_channels, num_frames = waveform.shape
-    figure, axes = plt.subplots(num_channels, 1)
-    if num_channels == 1:
-        axes = [axes]
-    for c in range(num_channels):
-        axes[c].specgram(waveform[c], Fs=sample_rate)
-        if num_channels > 1:
-            axes[c].set_ylabel(f"Channel {c+1}")
-        if xlim:
-            axes[c].set_xlim(xlim)
-    figure.suptitle(title)
-    plt.show(block=False)
+    if writer is None:
+        plt.show(block=block)
+    else:
+        writer.add_figure(writer_label, fig, writer_step)
+
+def summarize_tensor(t, title, show_whole_tensor=False):
+    if show_whole_tensor:
+        print(f"{title}: {t}; Shape: {t.shape}; Type: {t.type()}")
+    else:
+        print(f"{title}: Shape: {t.shape}; Type: {t.type()}")
