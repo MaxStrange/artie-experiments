@@ -1,0 +1,65 @@
+[Experiment]
+# Random Seed for reproducibility
+random-seed = 52341097
+
+# Must be the name one of the experiment folders
+type = "clustering"
+
+[Dataset]
+# Size of SGD mini batch
+batch-size = 32
+
+# Number of samples per window hop
+hop-length = 200
+
+# Add types of noise here if you want noise
+# Any of: "pitch-and-speed", "pitch", "speed", "value-augmentation", "distribution", "random-shifting", "hpss", "stretch"
+noise-types = []
+
+# Whether to normalize the spectrograms
+normalize = true
+
+# Number of samples per FFT to create the spectrogram. Frequency bins will be (this number / 2) + 1
+num-samples-per-fft = 400
+
+# Number of additional worker processes to load the dataset (set to 0 for main thread)
+num-workers = 0
+
+# Sample rate in Hz of each sound
+sample-rate-hz = 22500
+
+# Number of seconds each tone lasts
+signal-duration-seconds = 1
+
+# Dataset size
+size = 512
+
+# What tones (in Hz) to use for data points
+tones = [1000, 4000, 8000, 16000]
+
+# The type of dataset: autoencoder or classifier
+type = "classifier"
+
+[Evaluation]
+# Metrics to use
+metrics = ["loss", "accuracy", "confusion-matrix"]
+
+[Network]
+# Subtype of the network
+subtype = "original"
+
+# Type of network architecture
+type = "classifier"
+
+[Training]
+# Learning rate/step-size
+learning-rate = 1e-3
+
+# Loss function
+loss-function = "NLLLoss"
+
+# Number of epochs to train
+num-epochs = 3
+
+# Optimizer
+optimizer = "Adam"
