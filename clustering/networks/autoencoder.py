@@ -59,12 +59,12 @@ def _make_original_network(config):
         nn.ReLU(),
         nn.ConvTranspose2d(128, 64, (3, 3), stride=(2, 2), output_padding=(1, 0)),          # 3
         nn.ReLU(),
-        nn.ConvTranspose2d(64, 16, (3, 3), stride=(2, 2)),                                  # 2
+        nn.ConvTranspose2d(64, 32, (3, 3), stride=(2, 2), output_padding=(1, 0)),           # 2
         nn.ReLU(),
-        nn.ConvTranspose2d(16, 1, (3, 3), stride=(2, 1)),                                   # 1
+        nn.ConvTranspose2d(32, 16, (3, 3), stride=(2, 1)),#, output_padding=(1, 0)),            # 1
+        nn.ReLU(),
+        nn.Conv2d(16, 1, (3, 1)),
         nn.Sigmoid()
-        # TODO: Use smaller kernels and/or use stride later in the encoder/earlier in the decoder, that way
-        #       we hopefully will be able to get the bottom and the top? <-- Think about this
     )  # Need to get to 201, 113
     network = nn.Sequential(
         encoder,
