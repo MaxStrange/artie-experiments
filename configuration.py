@@ -85,7 +85,7 @@ class Configuration:
                     raise ConfigError("Could not convert {} via {} function. Error: {}".format(v, valuetype, e))
             if types is not None:
                 try:
-                    keytype, valuetype = types[k]
+                    keytype, valuetype = types[k.strip().strip('"')]
                     k = keytype(k.strip())
                     v = valuetype(v.strip())
                 except KeyError as e:
