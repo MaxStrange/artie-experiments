@@ -1,8 +1,33 @@
+from multiprocessing.sharedctypes import Value
 import configuration
 import librosa
 import logging
 import matplotlib.pyplot as plt
 import torch
+
+class NoopLRScheduler:
+    """
+    Does nothing. Just useful so that we don't have to check for None when trying to use it.
+    """
+    def __init__(self, optimizer) -> None:
+        self._optimizer = optimizer
+
+    def step(self):
+        pass
+
+def make_scheduler_from_config_file(config: configuration.Configuration, optimizer):
+    """
+    """
+    match scheduler_name := config.getstr('Training', 'scheduler'):
+        case "None":
+            return NoopLRScheduler(optimizer)
+        case "CyclicLR":
+            scheduler_params = config.getdict('Training', 'scheduler-params', keytype=str, valuetype=float)
+            return torch.optim.lr_scheduler.CyclicLR(optimizer, **scheduler_params)
+        case _:
+            errmsg = f"Cannot interpret {scheduler_name} for constructing a learning rate scheduler."
+            logging.error(errmsg)
+            raise ValueError(errmsg)
 
 def make_optimizer_from_config_file(config: configuration.Configuration, network: torch.nn.Module):
     """
@@ -11,6 +36,9 @@ def make_optimizer_from_config_file(config: configuration.Configuration, network
         case "Adam":
             lr = config.getfloat('Training', 'learning-rate')
             return torch.optim.Adam(network.parameters(), lr=lr)
+        case "SGD":
+            lr = config.getfloat('Training', 'learning-rate')
+            return torch.optim.SGD(network.parameters(), lr=lr)
         case _:
             errmsg = f"Cannot interpret {optimizer_name} for constructing an optimizer."
             logging.error(errmsg)
