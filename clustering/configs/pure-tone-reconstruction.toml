@@ -32,7 +32,7 @@ sample-rate-hz = 22500
 signal-duration-seconds = 1
 
 # Dataset size
-size = 2048
+size = 512
 
 # What tones (in Hz) to use for data points
 tones = [1000, 4000, 8000, 16000]
@@ -56,13 +56,16 @@ type = "autoencoder"
 
 [Training]
 # Learning rate/step-size
-learning-rate = 1e-3
+learning-rate = 1e-2
 
 # Loss function
 loss-function = "ReconstructionLoss"
 
 # Number of epochs to train
-num-epochs = 50
+num-epochs = 100
 
 # Optimizer
 optimizer = "Adam"
+
+# Optimizer parameters
+optimizer-params = {"betas" = [0.9, 0.99], "eps" = 1e-08, "weight_decay" = 0}

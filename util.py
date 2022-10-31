@@ -9,7 +9,9 @@ def make_optimizer_from_config_file(config: configuration.Configuration, network
     """
     match optimizer_name := config.getstr('Training', 'optimizer'):
         case "Adam":
-            return torch.optim.Adam(network.parameters(), config.getfloat('Training', 'learning-rate'))
+            lr = config.getfloat('Training', 'learning-rate')
+            optim_params = config.getdict('Training', 'optimizer-params', types={"betas": (str, list), "eps": (str, float), "weight_decay": (str, float)})
+            return torch.optim.Adam(network.parameters(), lr=lr, **optim_params)
         case _:
             errmsg = f"Cannot interpret {optimizer_name} for constructing an optimizer."
             logging.error(errmsg)

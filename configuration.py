@@ -42,18 +42,24 @@ class Configuration:
         else:
             raise ConfigError("Could not determine truth value of {}. Try setting it to 'true' or 'false'.".format(self.rawconfig[section][value]))
 
-    def getdict(self, section, value, keytype=None, valuetype=None):
+    def getdict(self, section, value, keytype=None, valuetype=None, types=None):
         """
         Attempts to get the value from section as an **OrderedDict**. If keytype is not None, will try to convert
         each key in the dict to the given type (which must be a function - like int, float, or str).
         Same goes for the valuetype.
+
+        Alternatively, if `types` is given, it should be a dict of the form
+        {key: (key_type, val_type)}
         """
         self._sanity_check_args(section, value)
         rawdict = self.rawconfig[section][value]
         if not rawdict.strip().startswith("{"):
             raise ConfigError("A dict must start with '{{', but instead starts with {}".format(rawdict[0]))
         elif not rawdict.strip().endswith("}"):
-            raise ConfigError("A dict must end with '}}', but instead starts with {}".format(rawdict[-1]))
+            raise ConfigError("A dict must end with '}}', but instead ends with {}".format(rawdict[-1]))
+
+        if types is not None and type(types) != dict:
+            raise ConfigError("Given a 'types' argument, but it is not a dictionary.")
 
         keyvalpairs = rawdict.strip("}{").strip().split(',')
 
@@ -62,11 +68,11 @@ class Configuration:
             if not kv.strip():
                 continue
             try:
-                k, v = kv.split(':')
+                k, v = kv.split('=')
             except TypeError:
-                raise ConfigError("Could not split {} on ':'. Commas must be used exclusively for delimiting key/value pairs.".format(kv))
+                raise ConfigError("Could not split {} on '='. Commas must be used exclusively for delimiting key/value pairs.".format(kv))
             except ValueError:
-                raise ConfigError("Could not split {} on ':'. Colons must be used exclusively between keys and values.".format(kv))
+                raise ConfigError("Could not split {} on '='. Colons must be used exclusively between keys and values.".format(kv))
             if keytype is not None:
                 try:
                     k = keytype(k.strip())
@@ -77,6 +83,15 @@ class Configuration:
                     v = valuetype(v.strip())
                 except ValueError as e:
                     raise ConfigError("Could not convert {} via {} function. Error: {}".format(v, valuetype, e))
+            if types is not None:
+                try:
+                    keytype, valuetype = types[k]
+                    k = keytype(k.strip())
+                    v = valuetype(v.strip())
+                except KeyError as e:
+                    raise ConfigError("Given a 'type's argument, but the types dict contains a key that doesn't exist: {}".format(k))
+                except ValueError as e:
+                    raise ConfigError("Could not convert key or value to right type in trying to get {} dict from config file.".format(value))
             thedict[k] = v
         return thedict
 

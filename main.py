@@ -14,11 +14,24 @@ import os
 import pkbar
 import random
 import shutil
+import signal
 import subprocess
-import tempfile
 import torch
 import torchinfo
 import util
+
+global_keep_training = False
+
+def keyboard_interrupt_handler(signal, frame):
+    """
+    Set a global flag to stop the training.
+    """
+    global global_keep_training
+    if global_keep_training:
+        global_keep_training = False
+        logging.error("CTRL+C received. Will stop after latest training iteration. Push CTRL+C again to exit without waiting.")
+    else:
+        exit(1)
 
 def make_from_config_file(config: configuration.Configuration, module: str):
     """
@@ -53,7 +66,6 @@ def evaluate(network: torch.nn.Module, test, config: configuration.Configuration
             if msg := metric.summarize():
                 logging.info(msg)
 
-
 def train_network(network: torch.nn.Module, train, val, config: configuration.Configuration, device, writer: SummaryWriter):
     """
     Train the given network and return it.
@@ -65,6 +77,10 @@ def train_network(network: torch.nn.Module, train, val, config: configuration.Co
     network.to(device)
     global_step = 0
     for epoch in range(nepochs):
+        if not global_keep_training:
+            # Received CTRL+C, we should exit
+            break
+
         kbar = pkbar.Kbar(batches_per_epoch, epoch, nepochs)
 
         for batch_index, (xbatch, ybatch) in enumerate(train):
@@ -142,6 +158,9 @@ if __name__ == "__main__":
         filehandler = logging.FileHandler(logfpath)
         filehandler.setFormatter(logging.Formatter(format))
         logging.getLogger().addHandler(filehandler)
+
+    # Create a keyboard interrupt handler
+    signal.signal(signal.SIGINT, keyboard_interrupt_handler)
 
     # Seed all sources of randomness
     randomseed = config.getint('Experiment', 'random-seed')

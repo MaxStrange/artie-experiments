@@ -61,9 +61,9 @@ def _make_original_network(config):
         nn.ReLU(),
         nn.ConvTranspose2d(64, 32, (3, 3), stride=(2, 2), output_padding=(1, 0)),           # 2
         nn.ReLU(),
-        nn.ConvTranspose2d(32, 16, (3, 3), stride=(2, 1)),#, output_padding=(1, 0)),            # 1
+        nn.ConvTranspose2d(32, 16, (3, 3), stride=(2, 1)),                                  # 1
         nn.ReLU(),
-        nn.Conv2d(16, 1, (3, 1)),
+        nn.Conv2d(16, 1, (5, 1)),
         nn.Sigmoid()
     )  # Need to get to 201, 113
     network = nn.Sequential(
