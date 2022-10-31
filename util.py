@@ -1,9 +1,22 @@
-from multiprocessing.sharedctypes import Value
+from torch.utils.tensorboard import SummaryWriter
 import configuration
 import librosa
 import logging
 import matplotlib.pyplot as plt
 import torch
+
+class Scheduler:
+    """
+    Wrapper around whatever scheduler algorithm, but it also writes to Tensorboard.
+    """
+    def __init__(self, scheduler, writer: SummaryWriter) -> None:
+        self._scheduler = scheduler
+        self._writer = writer
+
+    def step(self, global_step: int):
+        self._scheduler.step()
+        lr = self._scheduler.get_last_lr()
+        self._writer.add_scalar("Train/learning-rate", lr, global_step)
 
 class NoopLRScheduler:
     """
@@ -15,15 +28,16 @@ class NoopLRScheduler:
     def step(self):
         pass
 
-def make_scheduler_from_config_file(config: configuration.Configuration, optimizer):
+def make_scheduler_from_config_file(config: configuration.Configuration, optimizer, writer: SummaryWriter):
     """
     """
     match scheduler_name := config.getstr('Training', 'scheduler'):
         case "None":
-            return NoopLRScheduler(optimizer)
+            return Scheduler(NoopLRScheduler(optimizer), writer)
         case "CyclicLR":
             scheduler_params = config.getdict('Training', 'scheduler-params', keytype=str, valuetype=float)
-            return torch.optim.lr_scheduler.CyclicLR(optimizer, **scheduler_params)
+            scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, **scheduler_params)
+            return Scheduler(scheduler, writer)
         case _:
             errmsg = f"Cannot interpret {scheduler_name} for constructing a learning rate scheduler."
             logging.error(errmsg)

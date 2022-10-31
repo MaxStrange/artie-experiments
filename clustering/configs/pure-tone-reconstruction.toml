@@ -71,4 +71,4 @@ optimizer = "Adam"
 scheduler = "CyclicLR"
 
 # Learning rate scheduler parameters
-scheduler-params = {"base_lr" = 1e-5, "max_lr" = 1e-2, "step_size_up" = 1500, "gamma" = 0.9}
+scheduler-params = {"base_lr" = 1e-5, "max_lr" = 1e-2, "step_size_up" = 1500, "gamma" = 0.9, "cycle_momentum" = 0}

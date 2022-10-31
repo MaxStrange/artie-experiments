@@ -75,19 +75,19 @@ class Configuration:
                 raise ConfigError("Could not split {} on '='. Colons must be used exclusively between keys and values.".format(kv))
             if keytype is not None:
                 try:
-                    k = keytype(k.strip())
+                    k = keytype(k.strip().strip('"'))
                 except ValueError as e:
                     raise ConfigError("Could not convert {} via {} function. Error: {}".format(k, keytype, e))
             if valuetype is not None:
                 try:
-                    v = valuetype(v.strip())
+                    v = valuetype(v.strip().strip('"'))
                 except ValueError as e:
                     raise ConfigError("Could not convert {} via {} function. Error: {}".format(v, valuetype, e))
             if types is not None:
                 try:
                     keytype, valuetype = types[k.strip().strip('"')]
-                    k = keytype(k.strip())
-                    v = valuetype(v.strip())
+                    k = keytype(k.strip().strip('"'))
+                    v = valuetype(v.strip().strip('"'))
                 except KeyError as e:
                     raise ConfigError("Given a 'type's argument, but the types dict contains a key that doesn't exist: {}".format(k))
                 except ValueError as e:
