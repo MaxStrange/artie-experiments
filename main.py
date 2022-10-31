@@ -197,6 +197,7 @@ if __name__ == "__main__":
 
     # Train the network based on configuration file
     logging.info("Training neural network...")
+    global_keep_training = True
     network = train_network(network, train, val, config, device, writer)
 
     # Evaluate based on configuration file
