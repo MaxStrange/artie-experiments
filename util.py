@@ -16,6 +16,8 @@ class Scheduler:
     def step(self, global_step: int):
         self._scheduler.step()
         lr = self._scheduler.get_last_lr()
+        assert len(lr) == 1, f"Learning rate is not a list of one item: {lr}"
+        lr = lr[0]
         self._writer.add_scalar("Train/learning-rate", lr, global_step)
 
 class NoopLRScheduler:
