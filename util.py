@@ -33,11 +33,11 @@ class NoopLRScheduler:
 def make_scheduler_from_config_file(config: configuration.Configuration, optimizer, writer: SummaryWriter):
     """
     """
+    scheduler_params = config.getdict('Training', 'scheduler-params', keytype=str, valuetype=float)
     match scheduler_name := config.getstr('Training', 'scheduler'):
         case "None":
             return Scheduler(NoopLRScheduler(optimizer), writer)
         case "CyclicLR":
-            scheduler_params = config.getdict('Training', 'scheduler-params', keytype=str, valuetype=float)
             scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, **scheduler_params)
             return Scheduler(scheduler, writer)
         case _:

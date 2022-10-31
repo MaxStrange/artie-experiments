@@ -66,3 +66,12 @@ num-epochs = 6
 
 # Optimizer
 optimizer = "Adam"
+
+# Optimizer parameters (these are all interpreted as str:float)
+optimizer-params = {}
+
+# Learning rate scheduler (set to None if you don't want one)
+scheduler = "None"
+
+# Learning rate scheduler parameters (these are all interpreted as str:float)
+scheduler-params = {}

@@ -65,10 +65,13 @@ loss-function = "ReconstructionLoss"
 num-epochs = 100
 
 # Optimizer
-optimizer = "Adam"
+optimizer = "SGD"
+
+# Optimizer parameters (these are all interpreted as str:float)
+optimizer-params = {"momentum" = 0.9}
 
 # Learning rate scheduler (set to None if you don't want one)
 scheduler = "CyclicLR"
 
-# Learning rate scheduler parameters
-scheduler-params = {"base_lr" = 1e-5, "max_lr" = 1e-2, "step_size_up" = 1500, "gamma" = 0.9, "cycle_momentum" = 0}
+# Learning rate scheduler parameters (these are all interpreted as str:float)
+scheduler-params = {"base_lr" = 1e-5, "max_lr" = 1e-2, "step_size_up" = 500, "gamma" = 0.9, "cycle_momentum" = 1}
