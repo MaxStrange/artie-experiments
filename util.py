@@ -15,7 +15,11 @@ class Scheduler:
 
     def step(self, global_step: int):
         self._scheduler.step()
-        lr = self._scheduler.get_last_lr()
+        try:
+            lr = self._scheduler.get_last_lr()
+        except AttributeError:
+            # Nothing to do - our scheduler does not support this
+            return
         assert len(lr) == 1, f"Learning rate is not a list of one item: {lr}"
         lr = lr[0]
         self._writer.add_scalar("Train/learning-rate", lr, global_step)
@@ -29,9 +33,6 @@ class NoopLRScheduler:
 
     def step(self):
         pass
-
-    def get_last_lr(self):
-        return self._optimizer.lr
 
 def make_scheduler_from_config_file(config: configuration.Configuration, optimizer, writer: SummaryWriter):
     """
