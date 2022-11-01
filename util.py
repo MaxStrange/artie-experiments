@@ -30,6 +30,9 @@ class NoopLRScheduler:
     def step(self):
         pass
 
+    def get_last_lr(self):
+        return self._optimizer.lr
+
 def make_scheduler_from_config_file(config: configuration.Configuration, optimizer, writer: SummaryWriter):
     """
     """
