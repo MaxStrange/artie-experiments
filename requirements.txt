@@ -1,5 +1,5 @@
-torch=1.12.1+cu116
-torchaudio=0.12.1+cu116
+#torch==1.12.1+cu116
+#torchaudio==0.12.1+cu116
 librosa
 matplotlib
 pkbar
