@@ -32,7 +32,7 @@ sample-rate-hz = 22500
 signal-duration-seconds = 1
 
 # Dataset size
-size = 512
+size = 2048
 
 # What tones (in Hz) to use for data points
 tones = [1000, 4000, 8000, 16000]
@@ -49,20 +49,20 @@ metrics = ["loss", "reconstruction-image"]
 embedding-dims = 128
 
 # Subtype of the network
-subtype = "original"
+subtype = "baseline"
 
 # Type of network architecture
 type = "autoencoder"
 
 [Training]
 # Learning rate/step-size
-learning-rate = 1e-2
+learning-rate = 1e-3
 
 # Loss function
 loss-function = "ReconstructionLoss"
 
 # Number of epochs to train
-num-epochs = 100
+num-epochs = 75
 
 # Optimizer
 optimizer = "Adam"
@@ -71,7 +71,7 @@ optimizer = "Adam"
 optimizer-params = {}
 
 # Learning rate scheduler (set to None if you don't want one)
-scheduler = "CyclicLR"
+scheduler = "None"#"CyclicLR"
 
 # Learning rate scheduler parameters (these are all interpreted as str:float)
-scheduler-params = {"base_lr" = 1e-5, "max_lr" = 1e-2, "step_size_up" = 500, "gamma" = 0.9, "cycle_momentum" = 0}
+scheduler-params = {} #{"base_lr" = 1e-5, "max_lr" = 1e-2, "step_size_up" = 500, "gamma" = 0.9, "cycle_momentum" = 0}
