@@ -15,6 +15,7 @@ import pkbar
 import random
 import shutil
 import signal
+import schedulers
 import subprocess
 import torch
 import torchinfo
@@ -72,7 +73,7 @@ def train_network(network: torch.nn.Module, train, val, config: configuration.Co
     """
     lossfn = losses.make_loss_function_from_config_file(config)
     optimizer = util.make_optimizer_from_config_file(config, network)
-    scheduler = util.make_scheduler_from_config_file(config, optimizer, writer)
+    scheduler, scheduler_mode = schedulers.make_scheduler_from_config_file(config, optimizer, writer)
     nepochs = config.getint('Training', 'num-epochs')
     batches_per_epoch = len(train)
     network.to(device)
@@ -97,7 +98,8 @@ def train_network(network: torch.nn.Module, train, val, config: configuration.Co
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            scheduler.step(global_step)
+            if scheduler_mode == "batch":
+                scheduler.step(global_step)
 
             # Add some stats
             writer.add_scalar("Train/Loss", loss.item(), global_step)
@@ -115,6 +117,8 @@ def train_network(network: torch.nn.Module, train, val, config: configuration.Co
         print("")  # kbar doesn't add a newline to the end of the logs
         evaluate(network, val, config, device, writer, tag="Val", global_step=global_step)
         network.train()
+        if scheduler_mode == "epoch":
+            scheduler.step(global_step)
 
     return network
 
