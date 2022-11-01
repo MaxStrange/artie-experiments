@@ -5,64 +5,64 @@ def _make_original_network(config):
     embedding_dims = config.getint('Network', 'embedding-dims')
     encoder = nn.Sequential(
         nn.Conv2d(1, 2, (3, 3), stride=(2, 1)),         # 1
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(2, 4, (3, 3), stride=(2, 2)),         # 2
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(4, 8, (3, 3), stride=(2, 2)),         # 3
         nn.BatchNorm2d(8),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(8, 16, (3, 3), stride=(2, 2)),        # 4
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(16, 32, (3, 3)),                      # 5
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(32, 64, (3, 3)),                      # 6
         nn.BatchNorm2d(64),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(64, 128, (3, 3)),                     # 7
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(128, 256, (2, 3)),                    # 8
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(256, 512, (2, 3)),                    # 9
         nn.BatchNorm2d(512),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(512, 512, (2, 2)),                    # 10
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(512, 512, (2, 2)),                    # 11
         nn.BatchNorm2d(512),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Flatten(),
         nn.Linear(512, embedding_dims),
-        nn.ReLU(),
+        nn.LeakyReLU(),
     )
     decoder = nn.Sequential(
         nn.Linear(embedding_dims, 512),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Unflatten(1, (512, 1, 1)),
         nn.ConvTranspose2d(512, 512, (2, 2)),                                               # 11
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.ConvTranspose2d(512, 512, (2, 2)),                                               # 10
         nn.BatchNorm2d(512),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.ConvTranspose2d(512, 512, (2, 3)),                                               # 9
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.ConvTranspose2d(512, 512, (2, 3)),                                               # 8
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.ConvTranspose2d(512, 512, (3, 3)),                                               # 7
         nn.BatchNorm2d(512),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.ConvTranspose2d(512, 256, (3, 3)),                                               # 6
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.ConvTranspose2d(256, 256, (3, 3)),                                               # 5
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.ConvTranspose2d(256, 128, (3, 3), stride=(2, 2), output_padding=(1, 0)),         # 4
         nn.BatchNorm2d(128),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.ConvTranspose2d(128, 64, (3, 3), stride=(2, 2), output_padding=(1, 0)),          # 3
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.ConvTranspose2d(64, 32, (3, 3), stride=(2, 2), output_padding=(1, 0)),           # 2
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.ConvTranspose2d(32, 16, (3, 3), stride=(2, 1)),                                  # 1
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Conv2d(16, 1, (5, 1)),
         nn.Sigmoid()
     )  # Need to get to 201, 113
