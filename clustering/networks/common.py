@@ -44,10 +44,11 @@ class ResNet(nn.Module):
         self.bn = nn.BatchNorm2d(self.in_channels)
         self.lrelu = nn.LeakyReLU(inplace=True)
 
-        self.reslayers = [self.make_res_block(self.nchannels, 2)]
+        reslayers = [self.make_res_block(self.in_channels, 2)]
         for nkernels in reslayer_kernels:
             layer = self.make_res_block(nkernels, 2, 2)
-            self.reslayers.append(layer)
+            reslayers.append(layer)
+        self.reslayers = nn.Sequential(*reslayers)
 
         self.avg_pool = nn.AvgPool2d(12)
         self.flatten = nn.Flatten()

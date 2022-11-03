@@ -49,7 +49,7 @@ metrics = ["loss", "reconstruction-image"]
 embedding-dims = 128
 
 # Subtype of the network
-subtype = "dev"
+subtype = "resnet"
 
 # Type of network architecture
 type = "autoencoder"

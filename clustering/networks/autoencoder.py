@@ -1,5 +1,5 @@
 from torch import nn
-import common
+from . import common
 import logging
 
 def _make_baseline_network(config):

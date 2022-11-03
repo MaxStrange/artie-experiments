@@ -2,7 +2,7 @@
 This module consists of the neural network architectures for the classification models.
 """
 from torch import nn
-import common
+from . import common
 import logging
 
 
