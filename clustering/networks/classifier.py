@@ -55,8 +55,9 @@ def _make_pooling_network(config):
 def _make_residual_network(config):
     toneclasses = config.getlist('Dataset', 'tones', type=float)
     nclasses = len(toneclasses)
-    resnet = common.ResNet(1, nclasses)
-    return nn.Sequential(resnet, nn.LogSoftmax(1))
+    nchannels = 1
+    resnet = common.ResNet(nchannels)
+    return nn.Sequential(resnet, nn.Linear(512, nclasses), nn.LogSoftmax(1))
 
 def make_from_config_file(config):
     """

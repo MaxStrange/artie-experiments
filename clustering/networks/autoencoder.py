@@ -149,12 +149,13 @@ def _make_original_network(config):
 
 def _make_residual_network(config):
     embedding_dims = config.getint('Network', 'embedding-dims')
-    encoder = common.ResNet(1, embedding_dims)
+    nchannels = 1
+    encoder = common.ResNet(nchannels, (32, 64, 128))
     decoder = nn.Sequential(
-        nn.Linear(embedding_dims, 1024),
+        nn.Linear(embedding_dims, 512),
         nn.LeakyReLU(),
-        nn.Unflatten(1, (1024, 1, 1)),
-        nn.ConvTranspose2d(1024, 512, (2, 2)),
+        nn.Unflatten(1, (512, 1, 1)),
+        nn.ConvTranspose2d(512, 512, (2, 2)),
         nn.LeakyReLU(),
         nn.ConvTranspose2d(512, 256, (2, 2)),
         nn.LeakyReLU(),
@@ -183,6 +184,9 @@ def _make_residual_network(config):
     )  # Need to get to 201, 113
     network = nn.Sequential(
         encoder,
+        nn.Linear(256, 512),
+        nn.LeakyReLU(),
+        nn.Linear(512, embedding_dims),
         nn.LeakyReLU(),
         decoder
     )

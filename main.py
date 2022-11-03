@@ -195,11 +195,15 @@ if __name__ == "__main__":
 
     # Create a neural network based on configuration file
     logging.info("Creating neural network...")
-    network = make_from_config_file(config, "neuralnetwork")
-    torchinfo.summary(network, dims)
-    if args.exit_after_summary:
-        shutil.rmtree(tboarddpath)
-        exit()
+    try:
+        network = make_from_config_file(config, "neuralnetwork")
+        torchinfo.summary(network, dims)
+    except Exception as e:
+        logging.error("Error trying to build and summarize network:", e)
+    finally:
+        if args.exit_after_summary:
+            shutil.rmtree(tboarddpath)
+            exit()
 
     # Train the network based on configuration file
     logging.info("Training neural network...")

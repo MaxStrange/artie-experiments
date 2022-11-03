@@ -34,7 +34,7 @@ class ResNet(nn.Module):
     https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/02-intermediate/deep_residual_network/main.py
     under MIT license (then adjusted for our use case).
     """
-    def __init__(self, ninput_channels, num_out, reslayer_kernels=(32, 64)):
+    def __init__(self, ninput_channels, reslayer_kernels=(32, 64)):
         """
         reslayer_kernels is the number of kernels for each res layer after the first
         """
@@ -52,7 +52,6 @@ class ResNet(nn.Module):
 
         self.avg_pool = nn.AvgPool2d(12)
         self.flatten = nn.Flatten()
-        self.fc = nn.Linear(512, num_out)
         
     def make_res_block(self, out_channels, nblocks, stride=1):
         downsample = None
@@ -79,6 +78,5 @@ class ResNet(nn.Module):
             out = layer(out)
         out = self.avg_pool(out)
         out = self.flatten(out)
-        out = self.fc(out)
         return out
 
