@@ -46,7 +46,7 @@ metrics = ["loss", "reconstruction-image"]
 
 [Network]
 # If autoencoder, this is the dimensionality of the embedding space
-embedding-dims = 2
+embedding-dims = 128
 
 # Subtype of the network
 subtype = "dev"

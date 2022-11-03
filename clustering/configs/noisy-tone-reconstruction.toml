@@ -23,7 +23,7 @@ normalize = true
 num-samples-per-fft = 400
 
 # Number of additional worker processes to load the dataset (set to 0 for main thread)
-num-workers = 6
+num-workers = 4
 
 # Sample rate in Hz of each sound
 sample-rate-hz = 22500
@@ -32,7 +32,7 @@ sample-rate-hz = 22500
 signal-duration-seconds = 1
 
 # Dataset size
-size = 1024
+size = 2048
 
 # What tones (in Hz) to use for data points
 tones = [1000, 4000, 8000, 16000]
@@ -49,20 +49,20 @@ metrics = ["loss", "reconstruction-image"]
 embedding-dims = 128
 
 # Subtype of the network
-subtype = "original"
+subtype = "dev"
 
 # Type of network architecture
 type = "autoencoder"
 
 [Training]
 # Learning rate/step-size
-learning-rate = 1e-3
+learning-rate = 1e-4
 
 # Loss function
-loss-function = "L1Loss"
+loss-function = "ReconstructionLoss"
 
 # Number of epochs to train
-num-epochs = 6
+num-epochs = 150
 
 # Optimizer
 optimizer = "Adam"
