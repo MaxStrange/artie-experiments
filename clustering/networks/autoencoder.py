@@ -74,77 +74,21 @@ def _make_baseline_network(config):
     return network
 
 def _make_dev_network(config):
-    _make_baseline_network(config)
-
-def _make_original_network(config):
     embedding_dims = config.getint('Network', 'embedding-dims')
-    encoder = nn.Sequential(
-        nn.Conv2d(1, 2, (3, 3), stride=(2, 1)),         # 1
-        nn.LeakyReLU(),
-        nn.Conv2d(2, 4, (3, 3), stride=(2, 2)),         # 2
-        nn.LeakyReLU(),
-        nn.Conv2d(4, 8, (3, 3), stride=(2, 2)),         # 3
-        nn.BatchNorm2d(8),
-        nn.LeakyReLU(),
-        nn.Conv2d(8, 16, (3, 3), stride=(2, 2)),        # 4
-        nn.LeakyReLU(),
-        nn.Conv2d(16, 32, (3, 3)),                      # 5
-        nn.LeakyReLU(),
-        nn.Conv2d(32, 64, (3, 3)),                      # 6
-        nn.BatchNorm2d(64),
-        nn.LeakyReLU(),
-        nn.Conv2d(64, 128, (3, 3)),                     # 7
-        nn.LeakyReLU(),
-        nn.Conv2d(128, 256, (2, 3)),                    # 8
-        nn.LeakyReLU(),
-        nn.Conv2d(256, 512, (2, 3)),                    # 9
-        nn.BatchNorm2d(512),
-        nn.LeakyReLU(),
-        nn.Conv2d(512, 512, (2, 2)),                    # 10
-        nn.LeakyReLU(),
-        nn.Conv2d(512, 512, (2, 2)),                    # 11
-        nn.BatchNorm2d(512),
-        nn.LeakyReLU(),
-        nn.Flatten(),
-        nn.Linear(512, embedding_dims),
-        nn.LeakyReLU(),
-    )
-    decoder = nn.Sequential(
-        nn.Linear(embedding_dims, 512),
-        nn.LeakyReLU(),
-        nn.Unflatten(1, (512, 1, 1)),
-        nn.ConvTranspose2d(512, 512, (2, 2)),                                               # 11
-        nn.LeakyReLU(),
-        nn.ConvTranspose2d(512, 512, (2, 2)),                                               # 10
-        nn.BatchNorm2d(512),
-        nn.LeakyReLU(),
-        nn.ConvTranspose2d(512, 512, (2, 3)),                                               # 9
-        nn.LeakyReLU(),
-        nn.ConvTranspose2d(512, 512, (2, 3)),                                               # 8
-        nn.LeakyReLU(),
-        nn.ConvTranspose2d(512, 512, (3, 3)),                                               # 7
-        nn.BatchNorm2d(512),
-        nn.LeakyReLU(),
-        nn.ConvTranspose2d(512, 256, (3, 3)),                                               # 6
-        nn.LeakyReLU(),
-        nn.ConvTranspose2d(256, 256, (3, 3)),                                               # 5
-        nn.LeakyReLU(),
-        nn.ConvTranspose2d(256, 128, (3, 3), stride=(2, 2), output_padding=(1, 0)),         # 4
-        nn.BatchNorm2d(128),
-        nn.LeakyReLU(),
-        nn.ConvTranspose2d(128, 64, (3, 3), stride=(2, 2), output_padding=(1, 0)),          # 3
-        nn.LeakyReLU(),
-        nn.ConvTranspose2d(64, 32, (3, 3), stride=(2, 2), output_padding=(1, 0)),           # 2
-        nn.LeakyReLU(),
-        nn.ConvTranspose2d(32, 16, (3, 3), stride=(2, 1)),                                  # 1
-        nn.LeakyReLU(),
-        nn.Conv2d(16, 1, (5, 1)),
-        nn.Sigmoid()
-    )  # Need to get to 201, 113
+    encoder = common.ResNet(1, (32, 64, 128))
+    decoder = common.FancyDecoder()
+    nchannels = 512
     network = nn.Sequential(
         encoder,
-        decoder
-    )
+        nn.Linear(256, nchannels),
+        nn.LeakyReLU(),
+        nn.Linear(nchannels, embedding_dims),
+        nn.LeakyReLU(),
+        nn.Linear(embedding_dims, nchannels),
+        nn.LeakyReLU(),
+        nn.Unflatten(1, (nchannels, 1, 1)),
+        decoder     # Assumes 1x1
+    )  # Need to get to 201, 113
     return network
 
 def _make_residual_network(config):
@@ -202,8 +146,6 @@ def make_from_config_file(config):
     match nntype := config.getstr('Network', 'subtype').lower():
         case "baseline":
             return _make_baseline_network(config)
-        case "original":
-            return _make_original_network(config)
         case "dev":
             return _make_dev_network(config)
         case "resnet":
