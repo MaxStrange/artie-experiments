@@ -113,6 +113,56 @@ class InterpolateBlock(nn.Module):
         out = self.shuffle(out)
         return out
 
+class FancyDecoderTiny(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        # First branch: upsampling to learn residual using trained params
+        self.upblock16x16 = UpsampleBlock(16, 512, 128)
+        self.upblock32x32 = UpsampleBlock(2, 128, 64)
+        self.convblock25x28 = nn.Sequential(
+            nn.Conv2d(64, 64, (4, 3)),     # -> 29x30
+            nn.LeakyReLU(),
+            nn.Conv2d(64, 64, (3, 2)),     # -> 27x29
+            nn.LeakyReLU(),
+            nn.Conv2d(64, 32, (3, 2)),     # -> 25x28
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(32)
+        )
+        self.upblock100x112 = UpsampleBlock(4, 32, 1)
+
+        # Second branch: upsampling using non-learned params
+        self.upsample16x16 = InterpolateBlock(16, 512, 128)
+        self.upsample32x32 = InterpolateBlock(2, 128, 64)
+        self.upsample100x112 = InterpolateBlock(4, 32, 1)
+
+        # Braches meet up and combine the residual, then some fiddling to get the exact dims needed
+        self.tconv101x113 = nn.ConvTranspose2d(1, 1, (2, 2))
+        self.upsample202x113 = nn.Upsample(scale_factor=(2, 1))
+
+    def forward(self, x):
+        out = self.upblock16x16(x)
+        x = self.upsample16x16(x)
+        out = out + x
+
+        out = self.upblock32x32(out)
+        x = self.upsample32x32(x)
+        out = out + x
+
+        # Convolve down
+        out = self.convblock25x28(out)
+        x = torch.nn.functional.interpolate(x, size=(25, 28))
+
+        out = self.upblock100x112(out)
+        x = self.upsample100x112(x)
+        x = torch.mean(x, 1, keepdim=True)
+        out = out + x
+        
+        # Merged branch
+        out = self.tconv101x113(out)
+        out = self.upsample202x113(out)
+        out = out[:, :, 1:, :]  # Strip off one row of pixels as the network outputs 1 too many rows
+        return out
+
 class FancyDecoder(nn.Module):
     def __init__(self) -> None:
         super().__init__()

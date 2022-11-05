@@ -76,7 +76,7 @@ def _make_baseline_network(config):
 def _make_dev_network(config):
     embedding_dims = config.getint('Network', 'embedding-dims')
     encoder = common.ResNet(1, (32, 64, 128))
-    decoder = common.FancyDecoder()
+    decoder = common.FancyDecoderTiny()
     nchannels = 512
     network = nn.Sequential(
         encoder,
