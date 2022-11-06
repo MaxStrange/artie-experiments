@@ -117,7 +117,8 @@ class FancyDecoderTiny(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         # First branch: upsampling to learn residual using trained params
-        self.upblock16x16 = UpsampleBlock(16, 512, 128)
+        #self.upblock16x16 = UpsampleBlock(16, 512, 128)
+        self.upblock16x16 = UpsampleBlock(16, 256, 128)
         self.upblock32x32 = UpsampleBlock(2, 128, 64)
         self.convblock25x28 = nn.Sequential(
             nn.Conv2d(64, 64, (4, 3)),     # -> 29x30
@@ -130,10 +131,10 @@ class FancyDecoderTiny(nn.Module):
         )
         self.upblock100x112 = UpsampleBlock(4, 32, 1)
 
-        # Second branch: upsampling using non-learned params
-        self.upsample16x16 = InterpolateBlock(16, 512, 128)
-        self.upsample32x32 = InterpolateBlock(2, 128, 64)
-        self.upsample100x112 = InterpolateBlock(4, 32, 1)
+        ## Second branch: upsampling using non-learned params
+        #self.upsample16x16 = InterpolateBlock(16, 512, 128)
+        #self.upsample32x32 = InterpolateBlock(2, 128, 64)
+        #self.upsample100x112 = InterpolateBlock(4, 32, 1)
 
         # Braches meet up and combine the residual, then some fiddling to get the exact dims needed
         self.tconv101x113 = nn.ConvTranspose2d(1, 1, (2, 2))
@@ -141,21 +142,21 @@ class FancyDecoderTiny(nn.Module):
 
     def forward(self, x):
         out = self.upblock16x16(x)
-        x = self.upsample16x16(x)
-        out = out + x
+        #x = self.upsample16x16(x)
+        #out = out + x
 
         out = self.upblock32x32(out)
-        x = self.upsample32x32(x)
-        out = out + x
+        #x = self.upsample32x32(x)
+        #out = out + x
 
         # Convolve down
         out = self.convblock25x28(out)
-        x = torch.nn.functional.interpolate(x, size=(25, 28))
+        #x = torch.nn.functional.interpolate(x, size=(25, 28))
 
         out = self.upblock100x112(out)
-        x = self.upsample100x112(x)
-        x = torch.mean(x, 1, keepdim=True)
-        out = out + x
+        #x = self.upsample100x112(x)
+        #x = torch.mean(x, 1, keepdim=True)
+        #out = out + x
         
         # Merged branch
         out = self.tconv101x113(out)
