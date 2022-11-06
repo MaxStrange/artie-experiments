@@ -76,13 +76,13 @@ def _make_baseline_network(config):
 def _make_dev_network(config):
     embedding_dims = config.getint('Network', 'embedding-dims')
     encoder = common.ResNet(1, (32, 64))
-    decoder = common.FancyDecoderTiny()
-    nchannels = 256
+    nchannels = 128
+    decoder = common.PixelShuffleNetwork(nchannels)
     network = nn.Sequential(
         encoder,
-        nn.Linear(512, nchannels),
+        nn.Linear(512, 256),
         nn.LeakyReLU(),
-        nn.Linear(nchannels, embedding_dims),
+        nn.Linear(256, embedding_dims),
         nn.LeakyReLU(),
         nn.Linear(embedding_dims, nchannels),
         nn.LeakyReLU(),

@@ -84,21 +84,22 @@ class ResNet(nn.Module):
 class UpsampleBlock(nn.Module):
     def __init__(self, upscale_factor: int, inchannels: int, outchannels: int, batchnorm=True) -> None:
         super().__init__()
-        self.pixelshuffle = nn.PixelShuffle(upscale_factor)
-        shuffledchannels = int(inchannels / (upscale_factor * upscale_factor))
-        self.conv2d = nn.Conv2d(shuffledchannels, outchannels, (3, 3), padding=(1, 1))
+        # inchannels -> conv2D -> M -> batchnorm -> shuffle -> [M / (scale * scale)] == outchannels
+        shufflechannels = int(outchannels * upscale_factor * upscale_factor)
+        self.conv2d = nn.Conv2d(inchannels, shufflechannels, (3, 3), padding=(1, 1))
         if batchnorm:
-            self.batchnorm = nn.BatchNorm2d(outchannels)
+            self.batchnorm = nn.BatchNorm2d(shufflechannels)
         else:
             self.batchnorm = None
         self.lrelu = nn.LeakyReLU()
+        self.pixelshuffle = nn.PixelShuffle(upscale_factor)
 
     def forward(self, x):
-        out = self.pixelshuffle(x)
-        out = self.conv2d(out)
+        out = self.conv2d(x)
         if self.batchnorm:
             out = self.batchnorm(out)
         out = self.lrelu(out)
+        out = self.pixelshuffle(out)
         return out
 
 class InterpolateBlock(nn.Module):
@@ -113,13 +114,14 @@ class InterpolateBlock(nn.Module):
         out = self.shuffle(out)
         return out
 
-class FancyDecoderTiny(nn.Module):
-    def __init__(self) -> None:
+class PixelShuffleNetwork(nn.Module):
+    def __init__(self, inchannels: int) -> None:
         super().__init__()
-        # First branch: upsampling to learn residual using trained params
-        #self.upblock16x16 = UpsampleBlock(16, 512, 128)
-        self.upblock16x16 = UpsampleBlock(16, 256, 128)
-        self.upblock32x32 = UpsampleBlock(2, 128, 64)
+        self.upblock2x2 = UpsampleBlock(2, inchannels, 128)
+        self.upblock4x4 = UpsampleBlock(2, 128, 64, batchnorm=False)
+        self.upblock8x8 = UpsampleBlock(2, 64, 64, batchnorm=False)
+        self.upblock16x16 = UpsampleBlock(2, 64, 64)
+        self.upblock32x32 = UpsampleBlock(2, 64, 64, batchnorm=False)
         self.convblock25x28 = nn.Sequential(
             nn.Conv2d(64, 64, (4, 3)),     # -> 29x30
             nn.LeakyReLU(),
@@ -129,47 +131,31 @@ class FancyDecoderTiny(nn.Module):
             nn.LeakyReLU(),
             nn.BatchNorm2d(32)
         )
-        self.upblock100x112 = UpsampleBlock(4, 32, 1)
-
-        ## Second branch: upsampling using non-learned params
-        #self.upsample16x16 = InterpolateBlock(16, 512, 128)
-        #self.upsample32x32 = InterpolateBlock(2, 128, 64)
-        #self.upsample100x112 = InterpolateBlock(4, 32, 1)
-
-        # Braches meet up and combine the residual, then some fiddling to get the exact dims needed
+        self.upblock50x56 = UpsampleBlock(2, 32, 16)
+        self.upblock100x112 = UpsampleBlock(2, 16, 1, batchnorm=False)
         self.tconv101x113 = nn.ConvTranspose2d(1, 1, (2, 2))
         self.upsample202x113 = nn.Upsample(scale_factor=(2, 1))
 
     def forward(self, x):
-        out = self.upblock16x16(x)
-        #x = self.upsample16x16(x)
-        #out = out + x
-
+        out = self.upblock2x2(x)
+        out = self.upblock4x4(out)
+        out = self.upblock8x8(out)
+        out = self.upblock16x16(out)
         out = self.upblock32x32(out)
-        #x = self.upsample32x32(x)
-        #out = out + x
-
-        # Convolve down
         out = self.convblock25x28(out)
-        #x = torch.nn.functional.interpolate(x, size=(25, 28))
-
+        out = self.upblock50x56(out)
         out = self.upblock100x112(out)
-        #x = self.upsample100x112(x)
-        #x = torch.mean(x, 1, keepdim=True)
-        #out = out + x
-        
-        # Merged branch
         out = self.tconv101x113(out)
         out = self.upsample202x113(out)
         out = out[:, :, 1:, :]  # Strip off one row of pixels as the network outputs 1 too many rows
         return out
 
 class FancyDecoder(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, inchannels: int) -> None:
         super().__init__()
 
         # First branch: upsampling to learn residual using trained params
-        self.upblock4x4 = UpsampleBlock(4, 512, 512, batchnorm=False)
+        self.upblock4x4 = UpsampleBlock(4, inchannels, 512, batchnorm=False)
         self.upblock8x8 = UpsampleBlock(2, 512, 256)
         self.upblock16x16 = UpsampleBlock(2, 256, 128, batchnorm=False)
         self.upblock32x32 = UpsampleBlock(2, 128, 64)
