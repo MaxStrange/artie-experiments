@@ -54,7 +54,7 @@ def make_scheduler_from_config_file(config: configuration.Configuration, optimiz
             return Scheduler(scheduler, writer), "epoch"
         case "ExponentialLR":
             scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, **scheduler_params)
-            return Scheduler(scheduler, writer)
+            return Scheduler(scheduler, writer), "epoch"
         case _:
             errmsg = f"Cannot interpret {scheduler_name} for constructing a learning rate scheduler."
             logging.error(errmsg)
