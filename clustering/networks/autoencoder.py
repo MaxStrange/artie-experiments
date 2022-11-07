@@ -73,7 +73,7 @@ def _make_baseline_network(config):
     )
     return network
 
-def _make_dev_network(config):
+def _make_pixel_shuffle_network(config):
     embedding_dims = config.getint('Network', 'embedding-dims')
     encoder = common.ResNet(1, (32, 64, 128))
     nchannels = 256
@@ -88,6 +88,23 @@ def _make_dev_network(config):
         nn.LeakyReLU(),
         nn.Unflatten(1, (nchannels, 1, 1)),
         decoder     # Assumes 1x1
+    )  # Need to get to 201, 113
+    return network
+
+def _make_dev_network(config):
+    embedding_dims = config.getint('Network', 'embedding-dims')
+    encoder = common.ResNet(1, (32, 64, 128))
+    decoder = common.DevDecoder(512)
+    network = nn.Sequential(
+        encoder,
+        nn.Linear(256, 512),
+        nn.LeakyReLU(),
+        nn.Linear(512, embedding_dims),
+        nn.LeakyReLU(),
+        nn.Linear(embedding_dims, 512),
+        nn.LeakyReLU(),
+        nn.Unflatten(1, (512, 1, 1)),
+        decoder
     )  # Need to get to 201, 113
     return network
 
@@ -150,6 +167,8 @@ def make_from_config_file(config):
             return _make_dev_network(config)
         case "resnet":
             return _make_residual_network(config)
+        case "pixshuffle":
+            return _make_pixel_shuffle_network(config)
         case _:
             errmsg = f"Cannot interpret {nntype} as a type of neural network to make."
             logging.error(errmsg)

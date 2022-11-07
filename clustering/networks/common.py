@@ -213,3 +213,56 @@ class FancyDecoder(nn.Module):
         out = self.upsample202x113(out)
         out = out[:, :, 1:, :]  # Strip off one row of pixels as the network outputs 1 too many rows
         return out
+
+class DevDecoder(nn.Module):
+    def __init__(self, inchannels: int) -> None:
+        super().__init__()
+        i = int(inchannels / 4)
+        self.decoder = nn.Sequential(
+            # 1x1 -> 4x4
+            InterpolateBlock(4, inchannels, i),
+            # 4x4 -> 8x8
+            nn.ConvTranspose2d(i, i, (2, 2), stride=(2, 2)),
+            nn.LeakyReLU(),
+            # 8x8 -> 16x16
+            nn.ConvTranspose2d(i, i, (2, 2), stride=(2, 2)),
+            nn.LeakyReLU(),
+            # 16x16 -> 32x32
+            nn.ConvTranspose2d(i, i, (2, 2), stride=(2, 2)),
+            nn.BatchNorm2d(i),
+            nn.LeakyReLU(),
+            # 32x32 -> 25x28
+            nn.Conv2d(i, i, (4, 3)),     # -> 29x30
+            nn.LeakyReLU(),
+            nn.Conv2d(i, i, (3, 2)),     # -> 27x29
+            nn.LeakyReLU(),
+            nn.Conv2d(i, i, (3, 2)),     # -> 25x28
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(i),
+            # 25x28 -> 50x56
+            nn.ConvTranspose2d(i, i, (2, 2), stride=(2, 2)),
+            nn.BatchNorm2d(i),
+            # Convolve a bunch to smooth artifacts
+            nn.Conv2d(i, int(i/2), (3, 3), padding=(1, 1)),
+            nn.LeakyReLU(),
+            nn.Conv2d(int(i/2), int(i/2), (3, 3), padding=(1, 1)),
+            nn.BatchNorm2d(int(i/2)),
+            nn.LeakyReLU(),
+            nn.Conv2d(int(i/2), int(i/2), (3, 3), padding=(1, 1)),
+            nn.LeakyReLU(),
+            nn.Conv2d(int(i/2), 1, (3, 3), padding=(1, 1)),
+            nn.LeakyReLU(),
+            # Upsample -> 100x112
+            nn.Upsample(scale_factor=(2, 2)),
+            # 100x112 -> 101x113
+            nn.ConvTranspose2d(1, 1, (2, 2)),
+            nn.BatchNorm2d(1),
+            nn.LeakyReLU(),
+            # 101x113 -> 202x113
+            nn.Upsample(scale_factor=(2, 1)),
+        )
+
+    def forward(self, x):
+        out = self.decoder(x)
+        out = out[:, :, 1:, :]  # Strip off one row of pixels as the network outputs 1 too many rows
+        return out
