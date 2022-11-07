@@ -79,7 +79,7 @@ def train_network(network: torch.nn.Module, train, val, config: configuration.Co
     batches_per_epoch = len(train)
     network.to(device)
     global_step = 0
-    schedule = profiler.schedule(wait=0, warmup=0, active=10)
+    schedule = profiler.schedule(wait=0, warmup=5, active=10)
     with profiler.profile(schedule=schedule, on_trace_ready=profiler.tensorboard_trace_handler(writer.log_dir)) as prof:
         for epoch in range(nepochs):
             if not global_keep_training:
