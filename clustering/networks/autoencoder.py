@@ -94,7 +94,7 @@ def _make_pixel_shuffle_network(config):
 def _make_dev_network(config):
     embedding_dims = config.getint('Network', 'embedding-dims')
     encoder = common.ResNet(1, (32, 64, 128))
-    decoder = common.DevDecoder(512)
+    decoder = common.DevDecoder(1024)
     network = nn.Sequential(
         encoder,
         nn.Linear(256, 512),
