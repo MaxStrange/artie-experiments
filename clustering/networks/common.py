@@ -117,8 +117,9 @@ class InterpolateBlock(nn.Module):
 class PixelShuffleNetwork(nn.Module):
     def __init__(self, inchannels: int) -> None:
         super().__init__()
-        self.upblock2x2 = UpsampleBlock(2, inchannels, 128)
-        self.upblock4x4 = UpsampleBlock(2, 128, 64, batchnorm=False)
+        #self.upblock2x2 = UpsampleBlock(2, inchannels, 128)
+        #self.upblock4x4 = UpsampleBlock(2, 128, 64, batchnorm=False)
+        self.upblock4x4 = InterpolateBlock(4, inchannels, 64)
         self.upblock8x8 = UpsampleBlock(2, 64, 64, batchnorm=False)
         self.upblock16x16 = UpsampleBlock(2, 64, 64)
         self.upblock32x32 = UpsampleBlock(2, 64, 64, batchnorm=False)
@@ -137,8 +138,7 @@ class PixelShuffleNetwork(nn.Module):
         self.upsample202x113 = nn.Upsample(scale_factor=(2, 1))
 
     def forward(self, x):
-        out = self.upblock2x2(x)
-        out = self.upblock4x4(out)
+        out = self.upblock4x4(x)
         out = self.upblock8x8(out)
         out = self.upblock16x16(out)
         out = self.upblock32x32(out)
