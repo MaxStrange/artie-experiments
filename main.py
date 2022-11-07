@@ -2,6 +2,7 @@
 This set of experiments attempts to cluster sounds. 
 """
 from torch.utils.tensorboard import SummaryWriter
+from torch.profiler import profiler
 import argparse
 import configuration
 import datetime
@@ -78,47 +79,49 @@ def train_network(network: torch.nn.Module, train, val, config: configuration.Co
     batches_per_epoch = len(train)
     network.to(device)
     global_step = 0
-    for epoch in range(nepochs):
-        if not global_keep_training:
-            # Received CTRL+C, we should exit
-            break
+    schedule = profiler.schedule()
+    with profiler.profile(schedule=schedule, on_trace_ready=profiler.tensorboard_trace_handler(writer.log_dir)) as prof:
+        for epoch in range(nepochs):
+            if not global_keep_training:
+                # Received CTRL+C, we should exit
+                break
 
-        kbar = pkbar.Kbar(batches_per_epoch, epoch, nepochs)
+            kbar = pkbar.Kbar(batches_per_epoch, epoch, nepochs)
 
-        for batch_index, (xbatch, ybatch) in enumerate(train):
-            label_batch, freqlabel_batch = ybatch
-            xbatch = xbatch.float().to(device)
-            label_batch = label_batch.to(device)
+            for batch_index, (xbatch, ybatch) in enumerate(train):
+                label_batch, freqlabel_batch = ybatch
+                xbatch = xbatch.float().to(device)
+                label_batch = label_batch.to(device)
 
-            # Forward pass
-            pred_batch = network(xbatch)
-            loss = lossfn(pred_batch, label_batch)
+                # Forward pass
+                pred_batch = network(xbatch)
+                loss = lossfn(pred_batch, label_batch)
 
-            # Backprop
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            if scheduler_mode == "batch":
+                # Backprop
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                if scheduler_mode == "batch":
+                    scheduler.step(global_step)
+
+                # Add some stats
+                writer.add_scalar("Train/Loss", loss.item(), global_step)
+                util.plot_spectrogram(torch.squeeze(xbatch[0].cpu()), block=False, writer=writer, writer_label="Train/ExampleInput", writer_step=global_step)
+                ## Only do these every so often because they are slooooow
+                if batch_index % int(len(train) / 4) == 0:
+                    gradients = torch.concat([torch.flatten(p.grad.cpu()) for p in network.parameters() if p.grad is not None])
+                    parameters = torch.concat([torch.flatten(p.cpu()) for p in network.parameters()])
+                    writer.add_histogram("Train/Gradients", gradients, global_step)
+                    writer.add_histogram("Train/Params", parameters, global_step)
+
+                # Update progress
+                kbar.update(batch_index, values=[("loss", loss)])
+                global_step += 1
+            print("")  # kbar doesn't add a newline to the end of the logs
+            evaluate(network, val, config, device, writer, tag="Val", global_step=global_step)
+            network.train()
+            if scheduler_mode == "epoch":
                 scheduler.step(global_step)
-
-            # Add some stats
-            writer.add_scalar("Train/Loss", loss.item(), global_step)
-            util.plot_spectrogram(torch.squeeze(xbatch[0].cpu()), block=False, writer=writer, writer_label="Train/ExampleInput", writer_step=global_step)
-            ## Only do these every so often because they are slooooow
-            if batch_index % int(len(train) / 4) == 0:
-                gradients = torch.concat([torch.flatten(p.grad.cpu()) for p in network.parameters() if p.grad is not None])
-                parameters = torch.concat([torch.flatten(p.cpu()) for p in network.parameters()])
-                writer.add_histogram("Train/Gradients", gradients, global_step)
-                writer.add_histogram("Train/Params", parameters, global_step)
-
-            # Update progress
-            kbar.update(batch_index, values=[("loss", loss)])
-            global_step += 1
-        print("")  # kbar doesn't add a newline to the end of the logs
-        evaluate(network, val, config, device, writer, tag="Val", global_step=global_step)
-        network.train()
-        if scheduler_mode == "epoch":
-            scheduler.step(global_step)
 
     return network
 
@@ -180,6 +183,7 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logging.info(f"Device: {device}")
     logging.info(f"Version: {torch.__version__}")
+    torch.backends.cudnn.benchmark = True  # Speed up most convolutional kernel calls
 
     # Create a database feeding thread based on configuration file
     logging.info("Generating dataset...")
