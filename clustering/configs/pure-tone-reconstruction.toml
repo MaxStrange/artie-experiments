@@ -62,7 +62,7 @@ learning-rate = 1e-4
 loss-function = "ReconstructionLoss"
 
 # Number of epochs to train
-num-epochs = 1000
+num-epochs = 150
 
 # Optimizer
 optimizer = "Adam"

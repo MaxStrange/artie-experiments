@@ -117,20 +117,20 @@ class InterpolateBlock(nn.Module):
 class PixelShuffleNetwork(nn.Module):
     def __init__(self, inchannels: int) -> None:
         super().__init__()
-        self.upblock4x4 = InterpolateBlock(4, inchannels, 128)
-        self.upblock8x8 = UpsampleBlock(2, 128, 128, batchnorm=False)
-        self.upblock16x16 = UpsampleBlock(2, 128, 128)
-        self.upblock32x32 = UpsampleBlock(2, 128, 64, batchnorm=False)
+        self.upblock4x4 = InterpolateBlock(4, inchannels, 256)
+        self.upblock8x8 = UpsampleBlock(2, 256, 256, batchnorm=False)
+        self.upblock16x16 = UpsampleBlock(2, 256, 128)
+        self.upblock32x32 = UpsampleBlock(2, 128, 128, batchnorm=False)
         self.convblock25x28 = nn.Sequential(
-            nn.Conv2d(64, 64, (4, 3)),     # -> 29x30
+            nn.Conv2d(128, 128, (4, 3)),     # -> 29x30
             nn.LeakyReLU(),
-            nn.Conv2d(64, 64, (3, 2)),     # -> 27x29
+            nn.Conv2d(128, 128, (3, 2)),     # -> 27x29
             nn.LeakyReLU(),
-            nn.Conv2d(64, 32, (3, 2)),     # -> 25x28
+            nn.Conv2d(128, 64, (3, 2)),     # -> 25x28
             nn.LeakyReLU(),
-            nn.BatchNorm2d(32)
+            nn.BatchNorm2d(64)
         )
-        self.upblock50x56 = UpsampleBlock(2, 32, 32)
+        self.upblock50x56 = UpsampleBlock(2, 64, 32)
         self.upblock100x112 = UpsampleBlock(2, 32, 1, batchnorm=False)
         self.tconv101x113 = nn.ConvTranspose2d(1, 1, (2, 2))
         self.upsample202x113 = nn.Upsample(scale_factor=(2, 1))
