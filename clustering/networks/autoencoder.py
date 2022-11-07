@@ -101,9 +101,9 @@ def _make_dev_network(config):
         nn.LeakyReLU(),
         nn.Linear(512, embedding_dims),
         nn.LeakyReLU(),
-        nn.Linear(embedding_dims, 512),
+        nn.Linear(embedding_dims, 1024),
         nn.LeakyReLU(),
-        nn.Unflatten(1, (512, 1, 1)),
+        nn.Unflatten(1, (1024, 1, 1)),
         decoder
     )  # Need to get to 201, 113
     return network
