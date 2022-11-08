@@ -74,4 +74,4 @@ optimizer-params = {}
 scheduler = "ExponentialLR"
 
 # Learning rate scheduler parameters (these are all interpreted as str:float)
-scheduler-params = {"gamma" = 0.9}
+scheduler-params = {"gamma" = 0.95}
