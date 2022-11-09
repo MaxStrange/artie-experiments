@@ -107,6 +107,7 @@ def train_network(network: torch.nn.Module, train, val, config: configuration.Co
                 # Add some stats
                 writer.add_scalar("Train/Loss", loss.item(), global_step)
                 util.plot_spectrogram(torch.squeeze(xbatch[0].cpu()), block=False, writer=writer, writer_label="Train/ExampleInput", writer_step=global_step)
+                prof.step()
                 ## Only do these every so often because they are slooooow
                 if batch_index % int(len(train) / 4) == 0:
                     gradients = torch.concat([torch.flatten(p.grad.cpu()) for p in network.parameters() if p.grad is not None])
